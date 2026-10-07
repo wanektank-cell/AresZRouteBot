@@ -64,7 +64,7 @@ def menu(message):
 
 
 bot.infinity_polling()
-⚠️ Важный момент: строку
+#⚠️ Важный момент: строку
 
 TOKEN = "ТВОЙ_НОВЫЙ_ТОКЕН_ОТ_BOTFATHER"
 ты заменяешь на свой новый токен от BotFather.
