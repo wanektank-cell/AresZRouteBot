@@ -10,8 +10,8 @@ from telebot import types
 # SETTINGS
 # =========================
 
-TELEGRAM_TOKEN = os.getenv("8966168598:AAGG2apKFmMMzS06Uj4Dnl2foZ4gcMOIs00")
-VENDORIA_TOKEN = os.getenv("63:R-MNjV0eqo2iGVW_2CyRS")
+TELEGRAM_TOKEN = os.getenv("BOT_TOKEN")
+VENDORIA_TOKEN = os.getenv("VENDORIA_TOKEN")
 
 VENDORIA_URL = "https://vendoria.amadeustech.dev"
 SERVICE_ID = 500
