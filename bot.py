@@ -62,25 +62,6 @@ def menu(message):
             "💬 Поддержка ARES SHOP"
         )
 
-
-bot.infinity_polling()
-#⚠️ Важный момент: строку
-
-TOKEN = "ТВОЙ_НОВЫЙ_ТОКЕН_ОТ_BOTFATHER"
-ты заменяешь на свой новый токен от BotFather.
-
-Токен сюда не отправляй.
-
-После этого:
-
-Нажми Commit changes
-
-Напиши мне:
-"bot.py добавил"
-
-Следом создадим requirements.txt и запустим бота.
-
-
 # AresZRouteBot
 Telegram shop bot for Z Route: Redemption
 import telebot
