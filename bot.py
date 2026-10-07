@@ -131,13 +131,20 @@ def show_category(message, category_name):
             ),
             None
         )
+        
+if not category:
+    names = "\n".join(
+        f"• {c.get('name')} — ID {c.get('id')}"
+        for c in categories
+    )
 
-        if not category:
-            bot.send_message(
-                message.chat.id,
-                "❌ Категория пока не найдена."
-            )
-            return
+    bot.send_message(
+        message.chat.id,
+        "❌ Категория не найдена.\n\n"
+        "Вот что реально отдаёт Vendoria:\n\n"
+        + names
+    )
+    return
 
         products = get_products()
 
