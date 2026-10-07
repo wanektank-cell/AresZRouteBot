@@ -2,9 +2,12 @@
 # ARES SHOP — Z Route: Redemption
 
 import os
+import threading
 import requests
 import telebot
 from telebot import types
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
 
 # =========================
 # SETTINGS
@@ -16,6 +19,8 @@ VENDORIA_TOKEN = os.getenv("VENDORIA_TOKEN")
 VENDORIA_URL = "https://vendoria.amadeustech.dev"
 SERVICE_ID = 500
 
+PORT = int(os.getenv("PORT", "10000"))
+
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 HEADERS = {
@@ -25,11 +30,35 @@ HEADERS = {
 
 
 # =========================
+# RENDER HEALTH SERVER
+# =========================
+
+class HealthHandler(BaseHTTPRequestHandler):
+
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/plain")
+        self.end_headers()
+        self.wfile.write(b"ARES SHOP is running!")
+
+    def log_message(self, format, *args):
+        return
+
+
+def start_web_server():
+    server = HTTPServer(("0.0.0.0", PORT), HealthHandler)
+    print(f"🌐 Render server started on port {PORT}")
+    server.serve_forever()
+
+
+# =========================
 # VENDORIA
 # =========================
 
 def get_categories():
+
     url = f"{VENDORIA_URL}/api/categories"
+
     response = requests.get(
         url,
         headers=HEADERS,
@@ -38,18 +67,18 @@ def get_categories():
     )
 
     response.raise_for_status()
+
     return response.json()
 
 
 def get_products():
+
     url = f"{VENDORIA_URL}/api/products"
 
     response = requests.get(
         url,
         headers=HEADERS,
-        params={
-            "prices": "true"
-        },
+        params={"prices": "true"},
         timeout=20
     )
 
@@ -57,8 +86,8 @@ def get_products():
 
     products = response.json()
 
-    # Оставляем только Z Route
     categories = get_categories()
+
     category_ids = {
         category["id"]
         for category in categories
@@ -72,6 +101,7 @@ def get_products():
 
 
 def get_forms():
+
     url = f"{VENDORIA_URL}/api/forms"
 
     response = requests.get(
@@ -82,6 +112,7 @@ def get_forms():
     )
 
     response.raise_for_status()
+
     return response.json()
 
 
@@ -122,6 +153,7 @@ def start(message):
 def show_category(message, category_name):
 
     try:
+
         categories = get_categories()
 
         category = next(
@@ -131,20 +163,22 @@ def show_category(message, category_name):
             ),
             None
         )
-        
-if not category:
-    names = "\n".join(
-        f"• {c.get('name')} — ID {c.get('id')}"
-        for c in categories
-    )
 
-    bot.send_message(
-        message.chat.id,
-        "❌ Категория не найдена.\n\n"
-        "Вот что реально отдаёт Vendoria:\n\n"
-        + names
-    )
-    return
+        if not category:
+
+            names = "\n".join(
+                f"• {c.get('name')} — ID {c.get('id')}"
+                for c in categories
+            )
+
+            bot.send_message(
+                message.chat.id,
+                "❌ Категория не найдена.\n\n"
+                "Вот что реально отдаёт Vendoria:\n\n"
+                + names
+            )
+
+            return
 
         products = get_products()
 
@@ -154,13 +188,18 @@ if not category:
         ]
 
         if not category_products:
+
             bot.send_message(
                 message.chat.id,
                 "❌ В этой категории пока нет товаров."
             )
+
             return
 
-        text = f"🔥 ARES SHOP\n\n{category_name}\n\n"
+        text = (
+            f"🔥 ARES SHOP\n\n"
+            f"{category_name}\n\n"
+        )
 
         for product in category_products:
 
@@ -169,7 +208,6 @@ if not category:
             if not prices:
                 continue
 
-            # Берём первую доступную цену Vendoria
             price_usd = list(prices.values())[0]
 
             text += (
@@ -244,4 +282,13 @@ def menu(message):
 
 print("🔥 ARES SHOP запускается...")
 
+# Запускаем HTTP-сервер для Render
+web_thread = threading.Thread(
+    target=start_web_server,
+    daemon=True
+)
+
+web_thread.start()
+
+# Запускаем Telegram-бота
 bot.infinity_polling()
