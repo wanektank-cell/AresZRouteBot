@@ -227,7 +227,7 @@ def menu(message):
             message.chat.id,
             "💬 Поддержка ARES SHOP\n\n"
             "Если возникла проблема с заказом — "
-            "напишите сюда: @kazpantera1_tg"
+            "напишите сюда: @Darkwolfan"
         )
 
 
