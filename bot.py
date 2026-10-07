@@ -126,10 +126,13 @@ def start(message):
     keyboard = types.ReplyKeyboardMarkup(
         resize_keyboard=True
     )
-
-    btn1 = types.KeyboardButton("💎 Diamonds")
-    btn2 = types.KeyboardButton("🎟 Vouchers")
-    btn3 = types.KeyboardButton("⭐ Monthly Pass")
+    
+elif message.text == "💎 Diamonds":
+    show_category(message, "Алмазы")
+elif message.text == "🎟 Vouchers":
+    show_category(message, "Ваучеры")
+elif message.text == "⭐ Monthly Pass":
+    show_category(message, "Пропуск")
     btn4 = types.KeyboardButton("📦 Мои заказы")
     btn5 = types.KeyboardButton("💬 Поддержка")
 
