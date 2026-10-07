@@ -3,7 +3,7 @@
 import telebot
 from telebot import types
 
-TOKEN = "8966168598:AAFRMUZ8S0cFLT2KTSY1cvUmBwMwqtrgx1g"
+TOKEN = "8966168598:AAFHlceOM0rK5ZnP5CBBagzFGc0CCLfgMjk"
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -67,7 +67,7 @@ Telegram shop bot for Z Route: Redemption
 import telebot
 from telebot import types
 
-TOKEN = "ТВОЙ_НОВЫЙ_ТОКЕН_ОТ_BOTFATHER"
+TOKEN = "8966168598:AAFHlceOM0rK5ZnP5CBBagzFGc0CCLfgMjk"
 
 bot = telebot.TeleBot(TOKEN)
 
