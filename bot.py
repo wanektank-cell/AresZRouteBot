@@ -19,7 +19,15 @@ VENDORIA_TOKEN = os.getenv("VENDORIA_TOKEN")
 VENDORIA_URL = "https://vendoria.amadeustech.dev"
 SERVICE_ID = 500
 
+# Render сам передаёт PORT
 PORT = int(os.getenv("PORT", "10000"))
+
+# Проверяем наличие токенов
+if not TELEGRAM_TOKEN:
+    raise RuntimeError("BOT_TOKEN не найден в Environment Variables")
+
+if not VENDORIA_TOKEN:
+    raise RuntimeError("VENDORIA_TOKEN не найден в Environment Variables")
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
@@ -30,14 +38,14 @@ HEADERS = {
 
 
 # =========================
-# RENDER HEALTH SERVER
+# RENDER WEB SERVER
 # =========================
 
 class HealthHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         self.send_response(200)
-        self.send_header("Content-type", "text/plain")
+        self.send_header("Content-type", "text/plain; charset=utf-8")
         self.end_headers()
         self.wfile.write(b"ARES SHOP is running!")
 
@@ -46,8 +54,14 @@ class HealthHandler(BaseHTTPRequestHandler):
 
 
 def start_web_server():
-    server = HTTPServer(("0.0.0.0", PORT), HealthHandler)
+
+    server = HTTPServer(
+        ("0.0.0.0", PORT),
+        HealthHandler
+    )
+
     print(f"🌐 Render server started on port {PORT}")
+
     server.serve_forever()
 
 
@@ -62,7 +76,9 @@ def get_categories():
     response = requests.get(
         url,
         headers=HEADERS,
-        params={"serviceId": SERVICE_ID},
+        params={
+            "serviceId": SERVICE_ID
+        },
         timeout=20
     )
 
@@ -78,7 +94,9 @@ def get_products():
     response = requests.get(
         url,
         headers=HEADERS,
-        params={"prices": "true"},
+        params={
+            "prices": "true"
+        },
         timeout=20
     )
 
@@ -86,13 +104,16 @@ def get_products():
 
     products = response.json()
 
+    # Получаем категории Z Route
     categories = get_categories()
 
+    # ID категорий Z Route
     category_ids = {
         category["id"]
         for category in categories
     }
 
+    # Оставляем только товары Z Route
     return [
         product
         for product in products
@@ -107,7 +128,9 @@ def get_forms():
     response = requests.get(
         url,
         headers=HEADERS,
-        params={"serviceId": SERVICE_ID},
+        params={
+            "serviceId": SERVICE_ID
+        },
         timeout=20
     )
 
@@ -117,77 +140,19 @@ def get_forms():
 
 
 # =========================
-# START
+# SHOW PRODUCTS BY CATEGORY
 # =========================
 
-@bot.message_handler(commands=["start"])
-def start(message):
-
-    keyboard = types.ReplyKeyboardMarkup(
-        resize_keyboard=True
-    )
-    
-elif message.text == "💎 Diamonds":
-    show_category(message, "Алмазы")
-elif message.text == "🎟 Vouchers":
-    show_category(message, "Ваучеры")
-elif message.text == "⭐ Monthly Pass":
-    show_category(message, "Пропуск")
-    btn4 = types.KeyboardButton("📦 Мои заказы")
-    btn5 = types.KeyboardButton("💬 Поддержка")
-
-    keyboard.add(btn1, btn2)
-    keyboard.add(btn3)
-    keyboard.add(btn4, btn5)
-
-    bot.send_message(
-        message.chat.id,
-        "🔥 ARES SHOP\n\n"
-        "Z Route: Redemption\n\n"
-        "Выберите раздел:",
-        reply_markup=keyboard
-    )
-
-
-# =========================
-# CATALOG
-# =========================
-
-def show_category(message, category_name):
+def show_category_by_id(message, category_id, category_title):
 
     try:
-
-        categories = get_categories()
-
-        category = next(
-            (
-                c for c in categories
-                if c["name"].lower() == category_name.lower()
-            ),
-            None
-        )
-
-        if not category:
-
-            names = "\n".join(
-                f"• {c.get('name')} — ID {c.get('id')}"
-                for c in categories
-            )
-
-            bot.send_message(
-                message.chat.id,
-                "❌ Категория не найдена.\n\n"
-                "Вот что реально отдаёт Vendoria:\n\n"
-                + names
-            )
-
-            return
 
         products = get_products()
 
         category_products = [
-            p for p in products
-            if p.get("categoryId") == category["id"]
+            product
+            for product in products
+            if product.get("categoryId") == category_id
         ]
 
         if not category_products:
@@ -201,8 +166,10 @@ def show_category(message, category_name):
 
         text = (
             f"🔥 ARES SHOP\n\n"
-            f"{category_name}\n\n"
+            f"{category_title}\n\n"
         )
+
+        found_products = False
 
         for product in category_products:
 
@@ -211,12 +178,24 @@ def show_category(message, category_name):
             if not prices:
                 continue
 
+            # Берём первую доступную цену Vendoria
             price_usd = list(prices.values())[0]
 
+            found_products = True
+
             text += (
-                f"• {product['name']}\n"
+                f"• {product.get('name', 'Товар')}\n"
                 f"  Цена поставщика: ${price_usd:.2f}\n\n"
             )
+
+        if not found_products:
+
+            bot.send_message(
+                message.chat.id,
+                "❌ У товаров этой категории пока нет цены."
+            )
+
+            return
 
         bot.send_message(
             message.chat.id,
@@ -235,33 +214,70 @@ def show_category(message, category_name):
 
 
 # =========================
+# START
+# =========================
+
+@bot.message_handler(commands=["start"])
+def start(message):
+
+    keyboard = types.ReplyKeyboardMarkup(
+        resize_keyboard=True
+    )
+
+    btn1 = types.KeyboardButton("💎 Diamonds")
+    btn2 = types.KeyboardButton("🎟 Vouchers")
+    btn3 = types.KeyboardButton("⭐ Monthly Pass")
+    btn4 = types.KeyboardButton("📦 Мои заказы")
+    btn5 = types.KeyboardButton("💬 Поддержка")
+
+    keyboard.add(btn1, btn2)
+    keyboard.add(btn3)
+    keyboard.add(btn4, btn5)
+
+    bot.send_message(
+        message.chat.id,
+        "🔥 ARES SHOP\n\n"
+        "Z Route: Redemption\n\n"
+        "Выберите раздел:",
+        reply_markup=keyboard
+    )
+
+
+# =========================
 # MENU
 # =========================
 
 @bot.message_handler(func=lambda message: True)
 def menu(message):
 
+    # Алмазы — категория 1369
     if message.text == "💎 Diamonds":
 
-        show_category(
+        show_category_by_id(
             message,
-            "Diamonds"
+            1369,
+            "💎 Diamonds"
         )
 
+    # Ваучеры — категория 1368
     elif message.text == "🎟 Vouchers":
 
-        show_category(
+        show_category_by_id(
             message,
-            "Vouchers"
+            1368,
+            "🎟 Vouchers"
         )
 
+    # Пропуск — категория 1367
     elif message.text == "⭐ Monthly Pass":
 
-        show_category(
+        show_category_by_id(
             message,
-            "Pass"
+            1367,
+            "⭐ Monthly Pass"
         )
 
+    # Заказы
     elif message.text == "📦 Мои заказы":
 
         bot.send_message(
@@ -269,6 +285,7 @@ def menu(message):
             "📦 Раздел заказов пока находится в разработке."
         )
 
+    # Поддержка
     elif message.text == "💬 Поддержка":
 
         bot.send_message(
@@ -294,4 +311,6 @@ web_thread = threading.Thread(
 web_thread.start()
 
 # Запускаем Telegram-бота
-bot.infinity_polling()
+bot.infinity_polling(
+    skip_pending=True
+)
