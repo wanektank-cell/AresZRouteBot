@@ -1,5 +1,6 @@
 import os
 import threading
+import re
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 import requests
@@ -19,9 +20,6 @@ SERVICE_ID = 500
 
 PORT = int(os.getenv("PORT", "10000"))
 
-SUPPORT_USERNAME = "@Darkwolfan"
-
-# Курс USD/RUB для предварительного расчёта
 USD_RUB = 85.5
 
 
@@ -38,75 +36,63 @@ CATEGORY_DIAMONDS = 1369
 # ЦЕНЫ ARES SHOP
 # =========================================================
 #
-# Здесь цены уже учитывают цены в самой игре.
+# Цены игры:
 #
-# Официальные цены игры, которые мы используем:
-#
-# 99      = 99 ₽
-# 499     = 449 ₽
-# 999     = 899 ₽
-# 1999    = 1790 ₽
-# 4999    = 4490 ₽
-# 9999    = 8990 ₽
+# 99       = 99 ₽
+# 499      = 449 ₽
+# 999      = 899 ₽
+# 1999     = 1790 ₽
+# 4999     = 4490 ₽
+# 9999     = 8990 ₽
 #
 # Цены ARES SHOP:
 #
-# 99      = не продаём
-# 499     = не продаём
-# 999     = 889 ₽
-# 1999    = 1769 ₽
-# 4999    = 4449 ₽
-# 9999    = 8899 ₽
+# 99       = не продаём
+# 499      = не продаём
+# 999      = 889 ₽
+# 1999     = 1769 ₽
+# 4999     = 4449 ₽
+# 9999     = 8899 ₽
 #
-# None означает, что товар НЕ показывается.
+# ВАЖНО:
+# Здесь ключи проверяются как отдельные номиналы,
+# поэтому 99 НЕ перепутается с 999.
 # =========================================================
 
-RETAIL_PRICES = {
-
-    # -------------------------
-    # VOUCHERS
-    # -------------------------
-
-    "99": None,
-    "499": None,
-
-    "999": 889,
-
-    "1,999": 1769,
-    "1999": 1769,
-
-    "4,999": 4449,
-    "4999": 4449,
-
-    "9,999": 8899,
-    "9999": 8899,
+VOUCHER_PRICES = {
+    99: None,
+    499: None,
+    999: 889,
+    1999: 1769,
+    4999: 4449,
+    9999: 8899,
 }
 
 
 # =========================================================
-# ПРОВЕРКА ПЕРЕМЕННЫХ
+# ПРОВЕРКА ТОКЕНОВ
 # =========================================================
 
 if not TELEGRAM_TOKEN:
     raise RuntimeError(
-        "❌ Не найдена переменная BOT_TOKEN"
+        "Не найдена переменная BOT_TOKEN"
     )
 
 if not VENDORIA_TOKEN:
     raise RuntimeError(
-        "❌ Не найдена переменная VENDORIA_TOKEN"
+        "Не найдена переменная VENDORIA_TOKEN"
     )
 
 
 # =========================================================
-# TELEGRAM BOT
+# TELEGRAM
 # =========================================================
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 
 # =========================================================
-# VENDORIA HEADERS
+# VENDORIA
 # =========================================================
 
 HEADERS = {
@@ -114,10 +100,6 @@ HEADERS = {
     "Accept-Language": "ru",
 }
 
-
-# =========================================================
-# VENDORIA GET
-# =========================================================
 
 def vendoria_get(endpoint, params=None):
 
@@ -157,7 +139,7 @@ def vendoria_get(endpoint, params=None):
 
 
 # =========================================================
-# ПОЛУЧИТЬ ВСЕ ТОВАРЫ
+# ПОЛУЧЕНИЕ ТОВАРОВ
 # =========================================================
 
 def get_products():
@@ -193,12 +175,9 @@ def extract_price(value):
     if value is None:
         return None
 
-    # Если это число
     if isinstance(value, (int, float)):
-
         return float(value)
 
-    # Если это строка
     if isinstance(value, str):
 
         cleaned = (
@@ -211,14 +190,10 @@ def extract_price(value):
         )
 
         try:
-
             return float(cleaned)
-
         except Exception:
-
             return None
 
-    # Если словарь
     if isinstance(value, dict):
 
         possible_keys = [
@@ -243,7 +218,6 @@ def extract_price(value):
 
         return None
 
-    # Если список
     if isinstance(value, list):
 
         for item in value:
@@ -262,25 +236,67 @@ def extract_price(value):
 
 def product_supplier_price(product):
 
-    possible_fields = [
-
+    fields = [
         product.get("price"),
-
         product.get("prices"),
-
         product.get("cost"),
-
         product.get("amount"),
-
     ]
 
-    for field in possible_fields:
+    for field in fields:
 
         price = extract_price(field)
 
         if price is not None:
-
             return price
+
+    return None
+
+
+# =========================================================
+# ПОИСК НОМИНАЛА ВАУЧЕРА
+# =========================================================
+
+def get_voucher_nominal(name):
+
+    """
+    Достаём именно отдельный номинал.
+
+    Например:
+    99 Ваучеров   -> 99
+    499 Ваучеров  -> 499
+    999 Ваучеров  -> 999
+    1,999 Ваучеров -> 1999
+    4,999 Ваучеров -> 4999
+    9,999 Ваучеров -> 9999
+
+    Это не позволит 99 совпасть с 999.
+    """
+
+    # Убираем запятые
+    clean_name = name.replace(",", "")
+
+    # Ищем число
+    numbers = re.findall(
+        r"\d+",
+        clean_name
+    )
+
+    if not numbers:
+        return None
+
+    for number in numbers:
+
+        try:
+
+            value = int(number)
+
+            if value in VOUCHER_PRICES:
+
+                return value
+
+        except Exception:
+            continue
 
     return None
 
@@ -291,30 +307,54 @@ def product_supplier_price(product):
 
 def get_retail_price(
     name,
-    supplier_price=None
+    supplier_price=None,
+    category_id=None
 ):
 
-    name_lower = name.lower()
-
     # -----------------------------------------------------
-    # Сначала проверяем вручную заданные цены.
-    # Это особенно важно для Vouchers.
+    # VOUCHERS
     # -----------------------------------------------------
 
-    for key, price in RETAIL_PRICES.items():
+    if category_id == CATEGORY_VOUCHERS:
 
-        if key.lower() in name_lower:
+        nominal = get_voucher_nominal(name)
 
-            return price
+        print(
+            f"Voucher: {name} -> nominal={nominal}"
+        )
+
+        if nominal is None:
+            return None
+
+        return VOUCHER_PRICES.get(
+            nominal
+        )
 
     # -----------------------------------------------------
-    # Для остальных товаров пока используем
-    # предварительный автоматический расчёт.
-    #
-    # В дальнейшем заменим на реальные цены игры.
+    # DIAMONDS
     # -----------------------------------------------------
 
-    if supplier_price is not None:
+    if category_id == CATEGORY_DIAMONDS:
+
+        if supplier_price is None:
+            return None
+
+        rub = supplier_price * USD_RUB
+
+        retail = rub * 1.10
+
+        return int(
+            round(retail / 10) * 10
+        )
+
+    # -----------------------------------------------------
+    # PASS
+    # -----------------------------------------------------
+
+    if category_id == CATEGORY_PASS:
+
+        if supplier_price is None:
+            return None
 
         rub = supplier_price * USD_RUB
 
@@ -328,7 +368,7 @@ def get_retail_price(
 
 
 # =========================================================
-# ТОВАРЫ КАТЕГОРИИ
+# ПОЛУЧЕНИЕ ТОВАРОВ КАТЕГОРИИ
 # =========================================================
 
 def get_category_products(category_id):
@@ -336,15 +376,12 @@ def get_category_products(category_id):
     data = get_products()
 
     if not data:
-
         return []
 
-    # Vendoria может вернуть список
     if isinstance(data, list):
 
         products = data
 
-    # Или объект с products
     elif isinstance(data, dict):
 
         products = data.get(
@@ -411,7 +448,7 @@ def main_menu():
 
 
 # =========================================================
-# /START
+# START
 # =========================================================
 
 @bot.message_handler(
@@ -421,14 +458,11 @@ def start(message):
 
     text = (
         "🔥 <b>ARES SHOP</b>\n\n"
-
         "Магазин цифровых товаров "
         "для <b>Z Route: Redemption</b>.\n\n"
-
         "💎 Diamonds\n"
         "🎟 Vouchers\n"
         "⭐ Monthly Pass\n\n"
-
         "Выбери нужный раздел ниже."
     )
 
@@ -493,11 +527,11 @@ def show_category(
 
         retail_price = get_retail_price(
             name,
-            supplier_price
+            supplier_price,
+            category_id
         )
 
-        # Если наша цена None,
-        # товар вообще не показываем.
+        # None = товар не показываем
         if retail_price is None:
             continue
 
@@ -678,13 +712,24 @@ def product_selected(call):
 
     name = product_name(selected)
 
+    category_id = (
+        selected.get("categoryId")
+        or selected.get("category_id")
+    )
+
+    try:
+        category_id = int(category_id)
+    except Exception:
+        category_id = None
+
     supplier_price = (
         product_supplier_price(selected)
     )
 
     retail_price = get_retail_price(
         name,
-        supplier_price
+        supplier_price,
+        category_id
     )
 
     if retail_price is None:
@@ -699,13 +744,9 @@ def product_selected(call):
 
     text = (
         f"🛒 <b>{name}</b>\n\n"
-
-        f"💰 Цена: "
-        f"<b>{retail_price} ₽</b>\n\n"
-
+        f"💰 Цена: <b>{retail_price} ₽</b>\n\n"
         "⏱ Выдача заказа: "
         "<b>20–90 минут</b>\n\n"
-
         "После оплаты потребуется указать "
         "данные, необходимые для выдачи товара."
     )
@@ -730,13 +771,9 @@ def product_selected(call):
 
     bot.edit_message_text(
         text,
-
         call.message.chat.id,
-
         call.message.message_id,
-
         parse_mode="HTML",
-
         reply_markup=markup,
     )
 
@@ -764,9 +801,7 @@ def buy_product(call):
 
         (
             "🛒 <b>Покупка товара</b>\n\n"
-
             "Система оплаты ещё подключается.\n\n"
-
             "Пока заказ можно оформить через "
             "поддержку:"
         ),
@@ -785,9 +820,7 @@ def buy_product(call):
 
     bot.send_message(
         call.message.chat.id,
-
         "Нажми кнопку ниже:",
-
         reply_markup=markup,
     )
 
@@ -807,15 +840,12 @@ def my_orders(message):
 
         (
             "📦 <b>Мои заказы</b>\n\n"
-
             "Раздел находится в разработке.\n\n"
-
             "После подключения оплаты здесь "
             "будет история заказов."
         ),
 
         parse_mode="HTML",
-
         reply_markup=main_menu(),
     )
 
@@ -844,13 +874,11 @@ def support(message):
 
         (
             "💬 <b>Поддержка ARES SHOP</b>\n\n"
-
             "Если возник вопрос по товару или заказу, "
             "напиши нашей поддержке."
         ),
 
         parse_mode="HTML",
-
         reply_markup=markup,
     )
 
@@ -866,9 +894,7 @@ def other_message(message):
 
     bot.send_message(
         message.chat.id,
-
         "Выбери нужный раздел в меню 👇",
-
         reply_markup=main_menu(),
     )
 
@@ -932,7 +958,7 @@ if __name__ == "__main__":
 
     web_thread = threading.Thread(
         target=start_web_server,
-        daemon=True,
+        daemon=True
     )
 
     web_thread.start()
