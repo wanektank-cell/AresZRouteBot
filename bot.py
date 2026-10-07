@@ -1,17 +1,100 @@
 # AresZRouteBot
-# Telegram shop bot for Z Route: Redemption
+# ARES SHOP — Z Route: Redemption
 
+import os
+import requests
 import telebot
 from telebot import types
 
-TOKEN = "8966168598:AAGG2apKFmMMzS06Uj4Dnl2foZ4gcMOIs00"
+# =========================
+# SETTINGS
+# =========================
 
-bot = telebot.TeleBot(TOKEN)
+TELEGRAM_TOKEN = os.getenv("8966168598:AAGG2apKFmMMzS06Uj4Dnl2foZ4gcMOIs00")
+VENDORIA_TOKEN = os.getenv("63:R-MNjV0eqo2iGVW_2CyRS")
+
+VENDORIA_URL = "https://vendoria.amadeustech.dev"
+SERVICE_ID = 500
+
+bot = telebot.TeleBot(TELEGRAM_TOKEN)
+
+HEADERS = {
+    "Authorization": f"Shop {VENDORIA_TOKEN}",
+    "Accept-Language": "ru"
+}
 
 
-@bot.message_handler(commands=['start'])
+# =========================
+# VENDORIA
+# =========================
+
+def get_categories():
+    url = f"{VENDORIA_URL}/api/categories"
+    response = requests.get(
+        url,
+        headers=HEADERS,
+        params={"serviceId": SERVICE_ID},
+        timeout=20
+    )
+
+    response.raise_for_status()
+    return response.json()
+
+
+def get_products():
+    url = f"{VENDORIA_URL}/api/products"
+
+    response = requests.get(
+        url,
+        headers=HEADERS,
+        params={
+            "prices": "true"
+        },
+        timeout=20
+    )
+
+    response.raise_for_status()
+
+    products = response.json()
+
+    # Оставляем только Z Route
+    categories = get_categories()
+    category_ids = {
+        category["id"]
+        for category in categories
+    }
+
+    return [
+        product
+        for product in products
+        if product.get("categoryId") in category_ids
+    ]
+
+
+def get_forms():
+    url = f"{VENDORIA_URL}/api/forms"
+
+    response = requests.get(
+        url,
+        headers=HEADERS,
+        params={"serviceId": SERVICE_ID},
+        timeout=20
+    )
+
+    response.raise_for_status()
+    return response.json()
+
+
+# =========================
+# START
+# =========================
+
+@bot.message_handler(commands=["start"])
 def start(message):
-    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
+
+    keyboard = types.ReplyKeyboardMarkup(
+        resize_keyboard=True
+    )
 
     btn1 = types.KeyboardButton("💎 Diamonds")
     btn2 = types.KeyboardButton("🎟 Vouchers")
@@ -25,28 +108,133 @@ def start(message):
 
     bot.send_message(
         message.chat.id,
-        "🔥 ARES SHOP\n\nZ Route: Redemption\n\nВыберите раздел:",
+        "🔥 ARES SHOP\n\n"
+        "Z Route: Redemption\n\n"
+        "Выберите раздел:",
         reply_markup=keyboard
     )
 
+
+# =========================
+# CATALOG
+# =========================
+
+def show_category(message, category_name):
+
+    try:
+        categories = get_categories()
+
+        category = next(
+            (
+                c for c in categories
+                if c["name"].lower() == category_name.lower()
+            ),
+            None
+        )
+
+        if not category:
+            bot.send_message(
+                message.chat.id,
+                "❌ Категория пока не найдена."
+            )
+            return
+
+        products = get_products()
+
+        category_products = [
+            p for p in products
+            if p.get("categoryId") == category["id"]
+        ]
+
+        if not category_products:
+            bot.send_message(
+                message.chat.id,
+                "❌ В этой категории пока нет товаров."
+            )
+            return
+
+        text = f"🔥 ARES SHOP\n\n{category_name}\n\n"
+
+        for product in category_products:
+
+            prices = product.get("prices", {})
+
+            if not prices:
+                continue
+
+            # Берём первую доступную цену Vendoria
+            price_usd = list(prices.values())[0]
+
+            text += (
+                f"• {product['name']}\n"
+                f"  Цена поставщика: ${price_usd:.2f}\n\n"
+            )
+
+        bot.send_message(
+            message.chat.id,
+            text
+        )
+
+    except Exception as e:
+
+        print("VENDORIA ERROR:", e)
+
+        bot.send_message(
+            message.chat.id,
+            "⚠️ Не удалось загрузить каталог.\n"
+            "Попробуйте ещё раз через несколько секунд."
+        )
+
+
+# =========================
+# MENU
+# =========================
 
 @bot.message_handler(func=lambda message: True)
 def menu(message):
 
     if message.text == "💎 Diamonds":
-        bot.send_message(message.chat.id, "💎 Diamonds\n\nКаталог скоро загрузится из Vendoria.")
+
+        show_category(
+            message,
+            "Diamonds"
+        )
 
     elif message.text == "🎟 Vouchers":
-        bot.send_message(message.chat.id, "🎟 Vouchers\n\nКаталог скоро загрузится из Vendoria.")
+
+        show_category(
+            message,
+            "Vouchers"
+        )
 
     elif message.text == "⭐ Monthly Pass":
-        bot.send_message(message.chat.id, "⭐ Monthly Pass\n\nКаталог скоро загрузится из Vendoria.")
+
+        show_category(
+            message,
+            "Pass"
+        )
 
     elif message.text == "📦 Мои заказы":
-        bot.send_message(message.chat.id, "📦 У вас пока нет заказов.")
+
+        bot.send_message(
+            message.chat.id,
+            "📦 Раздел заказов пока находится в разработке."
+        )
 
     elif message.text == "💬 Поддержка":
-        bot.send_message(message.chat.id, "💬 Поддержка ARES SHOP")
 
+        bot.send_message(
+            message.chat.id,
+            "💬 Поддержка ARES SHOP\n\n"
+            "Если возникла проблема с заказом — "
+            "напишите сюда: @kazpantera1_tg"
+        )
+
+
+# =========================
+# RUN
+# =========================
+
+print("🔥 ARES SHOP запускается...")
 
 bot.infinity_polling()
