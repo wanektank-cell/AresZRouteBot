@@ -9,7 +9,7 @@ from telebot import types
 
 
 # =========================================================
-# НАСТРОЙКИ
+# РќРђРЎРўР РћР™РљР
 # =========================================================
 
 TELEGRAM_TOKEN = os.getenv("BOT_TOKEN")
@@ -26,7 +26,7 @@ CATEGORY_VOUCHERS = 1368
 CATEGORY_DIAMONDS = 1369
 
 
-# Цены ARES SHOP для Vouchers
+# Р¦РµРЅС‹ ARES SHOP РґР»СЏ Vouchers
 VOUCHER_PRICES = {
     99: None,
     499: None,
@@ -38,10 +38,10 @@ VOUCHER_PRICES = {
 
 
 if not TELEGRAM_TOKEN:
-    raise RuntimeError("Не найдена переменная BOT_TOKEN")
+    raise RuntimeError("РќРµ РЅР°Р№РґРµРЅР° РїРµСЂРµРјРµРЅРЅР°СЏ BOT_TOKEN")
 
 if not VENDORIA_TOKEN:
-    raise RuntimeError("Не найдена переменная VENDORIA_TOKEN")
+    raise RuntimeError("РќРµ РЅР°Р№РґРµРЅР° РїРµСЂРµРјРµРЅРЅР°СЏ VENDORIA_TOKEN")
 
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
@@ -54,7 +54,7 @@ HEADERS = {
 
 
 # =========================================================
-# ВРЕМЕННОЕ ХРАНИЛИЩЕ ДАННЫХ ФОРМЫ
+# Р’Р Р•РњР•РќРќРћР• РҐР РђРќРР›РР©Р• Р”РђРќРќР«РҐ Р¤РћР РњР«
 # =========================================================
 
 user_states = {}
@@ -105,7 +105,7 @@ def get_forms():
 
 
 # =========================================================
-# ЦЕНЫ
+# Р¦Р•РќР«
 # =========================================================
 
 def product_name(product):
@@ -113,7 +113,7 @@ def product_name(product):
         product.get("name")
         or product.get("title")
         or product.get("productName")
-        or f"Товар #{product.get('id', '?')}"
+        or f"РўРѕРІР°СЂ #{product.get('id', '?')}"
     )
 
 
@@ -272,7 +272,7 @@ def get_retail_price(
 
 
 # =========================================================
-# ТОВАРЫ
+# РўРћР’РђР Р«
 # =========================================================
 
 def get_category_products(category_id):
@@ -357,7 +357,7 @@ def find_product(product_id):
 
 
 # =========================================================
-# МЕНЮ
+# РњР•РќР®
 # =========================================================
 
 def main_menu():
@@ -367,17 +367,17 @@ def main_menu():
     )
 
     markup.row(
-        "💎 Diamonds",
-        "🎟 Vouchers"
+        "рџ’Ћ Diamonds",
+        "рџЋџ Vouchers"
     )
 
     markup.row(
-        "⭐ Monthly Pass"
+        "в­ђ Monthly Pass"
     )
 
     markup.row(
-        "📦 Мои заказы",
-        "💬 Поддержка"
+        "рџ“¦ РњРѕРё Р·Р°РєР°Р·С‹",
+        "рџ’¬ РџРѕРґРґРµСЂР¶РєР°"
     )
 
     return markup
@@ -391,13 +391,13 @@ def main_menu():
 def start(message):
 
     text = (
-        "🔥 <b>ARES SHOP</b>\n\n"
-        "Магазин цифровых товаров для "
+        "рџ”Ґ <b>ARES SHOP</b>\n\n"
+        "РњР°РіР°Р·РёРЅ С†РёС„СЂРѕРІС‹С… С‚РѕРІР°СЂРѕРІ РґР»СЏ "
         "<b>Z Route: Redemption</b>.\n\n"
-        "💎 Diamonds\n"
-        "🎟 Vouchers\n"
-        "⭐ Monthly Pass\n\n"
-        "Выбери нужный раздел ниже."
+        "рџ’Ћ Diamonds\n"
+        "рџЋџ Vouchers\n"
+        "в­ђ Monthly Pass\n\n"
+        "Р’С‹Р±РµСЂРё РЅСѓР¶РЅС‹Р№ СЂР°Р·РґРµР» РЅРёР¶Рµ."
     )
 
     bot.send_message(
@@ -409,7 +409,7 @@ def start(message):
 
 
 # =========================================================
-# КАТЕГОРИЯ
+# РљРђРўР•Р“РћР РРЇ
 # =========================================================
 
 def show_category(
@@ -420,7 +420,7 @@ def show_category(
 
     bot.send_message(
         message.chat.id,
-        "⏳ Загружаю товары..."
+        "вЏі Р—Р°РіСЂСѓР¶Р°СЋ С‚РѕРІР°СЂС‹..."
     )
 
     products = get_category_products(
@@ -431,8 +431,8 @@ def show_category(
 
         bot.send_message(
             message.chat.id,
-            "❌ Не удалось получить товары.\n\n"
-            "Попробуй ещё раз через несколько секунд.",
+            "вќЊ РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ С‚РѕРІР°СЂС‹.\n\n"
+            "РџРѕРїСЂРѕР±СѓР№ РµС‰С‘ СЂР°Р· С‡РµСЂРµР· РЅРµСЃРєРѕР»СЊРєРѕ СЃРµРєСѓРЅРґ.",
             reply_markup=main_menu()
         )
 
@@ -465,7 +465,7 @@ def show_category(
             continue
 
         button_text = (
-            f"{name} — {retail_price} ₽"
+            f"{name} вЂ” {retail_price} в‚Ѕ"
         )
 
         markup.add(
@@ -482,8 +482,8 @@ def show_category(
         bot.send_message(
             message.chat.id,
             f"<b>{title}</b>\n\n"
-            "Сейчас в этом разделе нет "
-            "доступных товаров.",
+            "РЎРµР№С‡Р°СЃ РІ СЌС‚РѕРј СЂР°Р·РґРµР»Рµ РЅРµС‚ "
+            "РґРѕСЃС‚СѓРїРЅС‹С… С‚РѕРІР°СЂРѕРІ.",
             parse_mode="HTML",
             reply_markup=main_menu()
         )
@@ -493,7 +493,7 @@ def show_category(
     bot.send_message(
         message.chat.id,
         f"<b>{title}</b>\n\n"
-        "Выбери товар:",
+        "Р’С‹Р±РµСЂРё С‚РѕРІР°СЂ:",
         parse_mode="HTML",
         reply_markup=markup
     )
@@ -501,45 +501,45 @@ def show_category(
 
 @bot.message_handler(
     func=lambda message:
-    message.text == "💎 Diamonds"
+    message.text == "рџ’Ћ Diamonds"
 )
 def diamonds(message):
 
     show_category(
         message,
         CATEGORY_DIAMONDS,
-        "💎 Diamonds"
+        "рџ’Ћ Diamonds"
     )
 
 
 @bot.message_handler(
     func=lambda message:
-    message.text == "🎟 Vouchers"
+    message.text == "рџЋџ Vouchers"
 )
 def vouchers(message):
 
     show_category(
         message,
         CATEGORY_VOUCHERS,
-        "🎟 Vouchers"
+        "рџЋџ Vouchers"
     )
 
 
 @bot.message_handler(
     func=lambda message:
-    message.text == "⭐ Monthly Pass"
+    message.text == "в­ђ Monthly Pass"
 )
 def monthly_pass(message):
 
     show_category(
         message,
         CATEGORY_PASS,
-        "⭐ Monthly Pass"
+        "в­ђ Monthly Pass"
     )
 
 
 # =========================================================
-# ВЫБОР ТОВАРА
+# Р’Р«Р‘РћР  РўРћР’РђР Рђ
 # =========================================================
 
 @bot.callback_query_handler(
@@ -558,7 +558,7 @@ def product_selected(call):
 
         bot.answer_callback_query(
             call.id,
-            "Ошибка товара",
+            "РћС€РёР±РєР° С‚РѕРІР°СЂР°",
             show_alert=True
         )
 
@@ -572,7 +572,7 @@ def product_selected(call):
 
         bot.answer_callback_query(
             call.id,
-            "Товар не найден",
+            "РўРѕРІР°СЂ РЅРµ РЅР°Р№РґРµРЅ",
             show_alert=True
         )
 
@@ -607,34 +607,34 @@ def product_selected(call):
 
         bot.answer_callback_query(
             call.id,
-            "Товар временно недоступен",
+            "РўРѕРІР°СЂ РІСЂРµРјРµРЅРЅРѕ РЅРµРґРѕСЃС‚СѓРїРµРЅ",
             show_alert=True
         )
 
         return
 
     text = (
-        f"🛒 <b>{name}</b>\n\n"
-        f"💰 Цена: <b>{retail_price} ₽</b>\n\n"
-        "⏱ Выдача заказа: "
-        "<b>20–90 минут</b>\n\n"
-        "После оплаты потребуется "
-        "указать данные, необходимые "
-        "для выдачи товара."
+        f"рџ›’ <b>{name}</b>\n\n"
+        f"рџ’° Р¦РµРЅР°: <b>{retail_price} в‚Ѕ</b>\n\n"
+        "вЏ± Р’С‹РґР°С‡Р° Р·Р°РєР°Р·Р°: "
+        "<b>20вЂ“90 РјРёРЅСѓС‚</b>\n\n"
+        "РџРѕСЃР»Рµ РѕРїР»Р°С‚С‹ РїРѕС‚СЂРµР±СѓРµС‚СЃСЏ "
+        "СѓРєР°Р·Р°С‚СЊ РґР°РЅРЅС‹Рµ, РЅРµРѕР±С…РѕРґРёРјС‹Рµ "
+        "РґР»СЏ РІС‹РґР°С‡Рё С‚РѕРІР°СЂР°."
     )
 
     markup = types.InlineKeyboardMarkup()
 
     markup.add(
         types.InlineKeyboardButton(
-            "🛒 Купить",
+            "рџ›’ РљСѓРїРёС‚СЊ",
             callback_data=f"buy:{product_id}"
         )
     )
 
     markup.add(
         types.InlineKeyboardButton(
-            "💬 Поддержка",
+            "рџ’¬ РџРѕРґРґРµСЂР¶РєР°",
             url="https://t.me/Darkwolfan"
         )
     )
@@ -651,7 +651,7 @@ def product_selected(call):
 
 
 # =========================================================
-# ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ФОРМЫ
+# Р’РЎРџРћРњРћР“РђРўР•Р›Р¬РќР«Р• Р¤РЈРќРљР¦РР Р¤РћР РњР«
 # =========================================================
 
 def normalize_forms(data):
@@ -705,7 +705,7 @@ def field_name(field):
         or field.get("label")
         or field.get("title")
         or field.get("key")
-        or "Поле"
+        or "РџРѕР»Рµ"
     )
 
 
@@ -788,11 +788,11 @@ def find_form_for_product(forms, product):
             except Exception:
                 continue
 
-    # Если форма одна — используем её
+    # Р•СЃР»Рё С„РѕСЂРјР° РѕРґРЅР° вЂ” РёСЃРїРѕР»СЊР·СѓРµРј РµС‘
     if len(forms) == 1:
         return forms[0]
 
-    # Пытаемся найти форму по product/service
+    # РџС‹С‚Р°РµРјСЃСЏ РЅР°Р№С‚Рё С„РѕСЂРјСѓ РїРѕ product/service
     for form in forms:
 
         if not isinstance(form, dict):
@@ -808,7 +808,7 @@ def find_form_for_product(forms, product):
 
 
 # =========================================================
-# НАЖАТИЕ КУПИТЬ
+# РќРђР–РђРўРР• РљРЈРџРРўР¬
 # =========================================================
 
 @bot.callback_query_handler(
@@ -827,7 +827,7 @@ def buy_product(call):
 
         bot.answer_callback_query(
             call.id,
-            "Ошибка товара",
+            "РћС€РёР±РєР° С‚РѕРІР°СЂР°",
             show_alert=True
         )
 
@@ -841,7 +841,7 @@ def buy_product(call):
 
         bot.answer_callback_query(
             call.id,
-            "Товар не найден",
+            "РўРѕРІР°СЂ РЅРµ РЅР°Р№РґРµРЅ",
             show_alert=True
         )
 
@@ -853,7 +853,7 @@ def buy_product(call):
 
     bot.send_message(
         call.message.chat.id,
-        "⏳ Получаю форму для оформления заказа..."
+        "вЏі РџРѕР»СѓС‡Р°СЋ С„РѕСЂРјСѓ РґР»СЏ РѕС„РѕСЂРјР»РµРЅРёСЏ Р·Р°РєР°Р·Р°..."
     )
 
     forms_data = get_forms()
@@ -862,8 +862,8 @@ def buy_product(call):
 
         bot.send_message(
             call.message.chat.id,
-            "❌ Не удалось получить форму Vendoria.\n\n"
-            "Попробуй ещё раз через несколько секунд."
+            "вќЊ РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ С„РѕСЂРјСѓ Vendoria.\n\n"
+            "РџРѕРїСЂРѕР±СѓР№ РµС‰С‘ СЂР°Р· С‡РµСЂРµР· РЅРµСЃРєРѕР»СЊРєРѕ СЃРµРєСѓРЅРґ."
         )
 
         return
@@ -884,9 +884,9 @@ def buy_product(call):
 
         bot.send_message(
             call.message.chat.id,
-            "❌ Не удалось определить форму "
-            "для этого товара.\n\n"
-            "Я вывел ответ Vendoria в лог Render."
+            "вќЊ РќРµ СѓРґР°Р»РѕСЃСЊ РѕРїСЂРµРґРµР»РёС‚СЊ С„РѕСЂРјСѓ "
+            "РґР»СЏ СЌС‚РѕРіРѕ С‚РѕРІР°СЂР°.\n\n"
+            "РЇ РІС‹РІРµР» РѕС‚РІРµС‚ Vendoria РІ Р»РѕРі Render."
         )
 
         return
@@ -905,13 +905,13 @@ def buy_product(call):
 
         bot.send_message(
             call.message.chat.id,
-            "⚠️ Vendoria вернула форму без полей.\n\n"
-            "Проверим ответ API перед следующим этапом."
+            "вљ пёЏ Vendoria РІРµСЂРЅСѓР»Р° С„РѕСЂРјСѓ Р±РµР· РїРѕР»РµР№.\n\n"
+            "РџСЂРѕРІРµСЂРёРј РѕС‚РІРµС‚ API РїРµСЂРµРґ СЃР»РµРґСѓСЋС‰РёРј СЌС‚Р°РїРѕРј."
         )
 
         return
 
-    # Сохраняем состояние пользователя
+    # РЎРѕС…СЂР°РЅСЏРµРј СЃРѕСЃС‚РѕСЏРЅРёРµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
     user_states[call.message.chat.id] = {
         "product_id": product_id,
         "product": product,
@@ -927,7 +927,7 @@ def buy_product(call):
 
 
 # =========================================================
-# ЗАПРОС СЛЕДУЮЩЕГО ПОЛЯ
+# Р—РђРџР РћРЎ РЎР›Р•Р”РЈР®Р©Р•Р“Рћ РџРћР›РЇ
 # =========================================================
 
 def ask_next_form_field(chat_id):
@@ -942,7 +942,7 @@ def ask_next_form_field(chat_id):
     fields = state["fields"]
     index = state["current_field"]
 
-    # Все поля заполнены
+    # Р’СЃРµ РїРѕР»СЏ Р·Р°РїРѕР»РЅРµРЅС‹
     if index >= len(fields):
 
         finish_form(
@@ -1012,25 +1012,25 @@ def ask_next_form_field(chat_id):
 
             bot.send_message(
                 chat_id,
-                f"📝 <b>{name}</b>\n\n"
-                "Выбери вариант:",
+                f"рџ“ќ <b>{name}</b>\n\n"
+                "Р’С‹Р±РµСЂРё РІР°СЂРёР°РЅС‚:",
                 parse_mode="HTML",
                 reply_markup=markup
             )
 
             return
 
-    # Остальные типы пока вводим текстом
+    # РћСЃС‚Р°Р»СЊРЅС‹Рµ С‚РёРїС‹ РїРѕРєР° РІРІРѕРґРёРј С‚РµРєСЃС‚РѕРј
     bot.send_message(
         chat_id,
-        f"📝 <b>{name}</b>\n\n"
-        "Отправь значение сообщением.",
+        f"рџ“ќ <b>{name}</b>\n\n"
+        "РћС‚РїСЂР°РІСЊ Р·РЅР°С‡РµРЅРёРµ СЃРѕРѕР±С‰РµРЅРёРµРј.",
         parse_mode="HTML"
     )
 
 
 # =========================================================
-# SELECT В ФОРМЕ
+# SELECT Р’ Р¤РћР РњР•
 # =========================================================
 
 @bot.callback_query_handler(
@@ -1053,7 +1053,7 @@ def form_select(call):
 
         bot.answer_callback_query(
             call.id,
-            "Ошибка выбора",
+            "РћС€РёР±РєР° РІС‹Р±РѕСЂР°",
             show_alert=True
         )
 
@@ -1069,7 +1069,7 @@ def form_select(call):
 
         bot.answer_callback_query(
             call.id,
-            "Сессия устарела",
+            "РЎРµСЃСЃРёСЏ СѓСЃС‚Р°СЂРµР»Р°",
             show_alert=True
         )
 
@@ -1081,7 +1081,7 @@ def form_select(call):
 
         bot.answer_callback_query(
             call.id,
-            "Поле не найдено",
+            "РџРѕР»Рµ РЅРµ РЅР°Р№РґРµРЅРѕ",
             show_alert=True
         )
 
@@ -1100,7 +1100,7 @@ def form_select(call):
 
     bot.answer_callback_query(
         call.id,
-        "Выбрано"
+        "Р’С‹Р±СЂР°РЅРѕ"
     )
 
     ask_next_form_field(
@@ -1109,7 +1109,7 @@ def form_select(call):
 
 
 # =========================================================
-# ТЕКСТОВЫЕ ПОЛЯ ФОРМЫ
+# РўР•РљРЎРўРћР’Р«Р• РџРћР›РЇ Р¤РћР РњР«
 # =========================================================
 
 @bot.message_handler(
@@ -1137,7 +1137,7 @@ def form_text_input(message):
         field
     )
 
-    # SELECT обрабатывается кнопками
+    # SELECT РѕР±СЂР°Р±Р°С‚С‹РІР°РµС‚СЃСЏ РєРЅРѕРїРєР°РјРё
     if ftype in [
         "select",
         "dropdown",
@@ -1162,7 +1162,7 @@ def form_text_input(message):
 
 
 # =========================================================
-# ЗАВЕРШЕНИЕ ФОРМЫ
+# Р—РђР’Р•Р РЁР•РќРР• Р¤РћР РњР«
 # =========================================================
 
 def finish_form(chat_id):
@@ -1207,15 +1207,15 @@ def finish_form(chat_id):
     )
 
     text = (
-        "✅ <b>Данные получены</b>\n\n"
-        f"🛒 Товар: <b>{name}</b>\n"
-        f"💰 Цена: <b>{retail_price} ₽</b>\n\n"
-        "📋 Данные для выдачи сохранены.\n\n"
-        "⚠️ Оплата пока не подключена, "
-        "поэтому заказ в Vendoria ещё "
-        "НЕ создаётся.\n\n"
-        "Следующим этапом подключим "
-        "оплату и создание реального заказа."
+        "вњ… <b>Р”Р°РЅРЅС‹Рµ РїРѕР»СѓС‡РµРЅС‹</b>\n\n"
+        f"рџ›’ РўРѕРІР°СЂ: <b>{name}</b>\n"
+        f"рџ’° Р¦РµРЅР°: <b>{retail_price} в‚Ѕ</b>\n\n"
+        "рџ“‹ Р”Р°РЅРЅС‹Рµ РґР»СЏ РІС‹РґР°С‡Рё СЃРѕС…СЂР°РЅРµРЅС‹.\n\n"
+        "вљ пёЏ РћРїР»Р°С‚Р° РїРѕРєР° РЅРµ РїРѕРґРєР»СЋС‡РµРЅР°, "
+        "РїРѕСЌС‚РѕРјСѓ Р·Р°РєР°Р· РІ Vendoria РµС‰С‘ "
+        "РќР• СЃРѕР·РґР°С‘С‚СЃСЏ.\n\n"
+        "РЎР»РµРґСѓСЋС‰РёРј СЌС‚Р°РїРѕРј РїРѕРґРєР»СЋС‡РёРј "
+        "РѕРїР»Р°С‚Сѓ Рё СЃРѕР·РґР°РЅРёРµ СЂРµР°Р»СЊРЅРѕРіРѕ Р·Р°РєР°Р·Р°."
     )
 
     bot.send_message(
@@ -1229,38 +1229,38 @@ def finish_form(chat_id):
         answers
     )
 
-    # Состояние пока сохраняем для тестирования
+    # РЎРѕСЃС‚РѕСЏРЅРёРµ РїРѕРєР° СЃРѕС…СЂР°РЅСЏРµРј РґР»СЏ С‚РµСЃС‚РёСЂРѕРІР°РЅРёСЏ
     state["completed"] = True
 
 
 # =========================================================
-# МОИ ЗАКАЗЫ
+# РњРћР Р—РђРљРђР—Р«
 # =========================================================
 
 @bot.message_handler(
     func=lambda message:
-    message.text == "📦 Мои заказы"
+    message.text == "рџ“¦ РњРѕРё Р·Р°РєР°Р·С‹"
 )
 def my_orders(message):
 
     bot.send_message(
         message.chat.id,
-        "📦 <b>Мои заказы</b>\n\n"
-        "Раздел находится в разработке.\n\n"
-        "После подключения оплаты здесь "
-        "будет история заказов.",
+        "рџ“¦ <b>РњРѕРё Р·Р°РєР°Р·С‹</b>\n\n"
+        "Р Р°Р·РґРµР» РЅР°С…РѕРґРёС‚СЃСЏ РІ СЂР°Р·СЂР°Р±РѕС‚РєРµ.\n\n"
+        "РџРѕСЃР»Рµ РїРѕРґРєР»СЋС‡РµРЅРёСЏ РѕРїР»Р°С‚С‹ Р·РґРµСЃСЊ "
+        "Р±СѓРґРµС‚ РёСЃС‚РѕСЂРёСЏ Р·Р°РєР°Р·РѕРІ.",
         parse_mode="HTML",
         reply_markup=main_menu()
     )
 
 
 # =========================================================
-# ПОДДЕРЖКА
+# РџРћР”Р”Р•Р Р–РљРђ
 # =========================================================
 
 @bot.message_handler(
     func=lambda message:
-    message.text == "💬 Поддержка"
+    message.text == "рџ’¬ РџРѕРґРґРµСЂР¶РєР°"
 )
 def support(message):
 
@@ -1268,23 +1268,23 @@ def support(message):
 
     markup.add(
         types.InlineKeyboardButton(
-            "💬 Написать в поддержку",
+            "рџ’¬ РќР°РїРёСЃР°С‚СЊ РІ РїРѕРґРґРµСЂР¶РєСѓ",
             url="https://t.me/Darkwolfan"
         )
     )
 
     bot.send_message(
         message.chat.id,
-        "💬 <b>Поддержка ARES SHOP</b>\n\n"
-        "Если возник вопрос по товару "
-        "или заказу, напиши нашей поддержке.",
+        "рџ’¬ <b>РџРѕРґРґРµСЂР¶РєР° ARES SHOP</b>\n\n"
+        "Р•СЃР»Рё РІРѕР·РЅРёРє РІРѕРїСЂРѕСЃ РїРѕ С‚РѕРІР°СЂСѓ "
+        "РёР»Рё Р·Р°РєР°Р·Сѓ, РЅР°РїРёС€Рё РЅР°С€РµР№ РїРѕРґРґРµСЂР¶РєРµ.",
         parse_mode="HTML",
         reply_markup=markup
     )
 
 
 # =========================================================
-# ПРОЧИЕ СООБЩЕНИЯ
+# РџР РћР§РР• РЎРћРћР‘Р©Р•РќРРЇ
 # =========================================================
 
 @bot.message_handler(
@@ -1294,13 +1294,13 @@ def other_message(message):
 
     bot.send_message(
         message.chat.id,
-        "Выбери нужный раздел в меню 👇",
+        "Р’С‹Р±РµСЂРё РЅСѓР¶РЅС‹Р№ СЂР°Р·РґРµР» РІ РјРµРЅСЋ рџ‘‡",
         reply_markup=main_menu()
     )
 
 
 # =========================================================
-# RENDER HEALTH SERVER
+# RENDER WEBSITE
 # =========================================================
 
 class HealthHandler(
@@ -1309,18 +1309,65 @@ class HealthHandler(
 
     def do_GET(self):
 
-        self.send_response(200)
+        path = self.path.split("?")[0]
 
-        self.send_header(
-            "Content-type",
-            "text/plain; charset=utf-8"
-        )
+        pages = {
+            "/": "index.html",
+            "/index.html": "index.html",
+            "/offer": "offer.html",
+            "/offer.html": "offer.html",
+            "/privacy": "privacy.html",
+            "/privacy.html": "privacy.html",
+            "/contacts": "contacts.html",
+            "/contacts.html": "contacts.html",
+        }
 
-        self.end_headers()
+        filename = pages.get(path)
 
-        self.wfile.write(
-            b"ARES SHOP is running!"
-        )
+        if filename is None:
+
+            self.send_response(404)
+            self.send_header(
+                "Content-type",
+                "text/html; charset=utf-8"
+            )
+            self.end_headers()
+            self.wfile.write(
+                "<h1>404</h1><p>Page not found</p>".encode("utf-8")
+            )
+            return
+
+        try:
+
+            file_path = os.path.join("site", filename)
+
+            with open(file_path, "rb") as f:
+                content = f.read()
+
+            self.send_response(200)
+            self.send_header(
+                "Content-type",
+                "text/html; charset=utf-8"
+            )
+            self.send_header(
+                "Content-Length",
+                str(len(content))
+            )
+            self.end_headers()
+            self.wfile.write(content)
+
+        except Exception as e:
+
+            print("SITE ERROR:", e)
+            self.send_response(500)
+            self.send_header(
+                "Content-type",
+                "text/plain; charset=utf-8"
+            )
+            self.end_headers()
+            self.wfile.write(
+                b"Internal server error"
+            )
 
     def log_message(
         self,
@@ -1338,7 +1385,7 @@ def start_web_server():
     )
 
     print(
-        f"🌐 Render server started "
+        f"рџЊђ Render server started "
         f"on port {PORT}"
     )
 
@@ -1346,13 +1393,13 @@ def start_web_server():
 
 
 # =========================================================
-# ЗАПУСК
+# Р—РђРџРЈРЎРљ
 # =========================================================
 
 if __name__ == "__main__":
 
     print(
-        "🔥 ARES SHOP запускается..."
+        "рџ”Ґ ARES SHOP Р·Р°РїСѓСЃРєР°РµС‚СЃСЏ..."
     )
 
     web_thread = threading.Thread(
@@ -1363,7 +1410,7 @@ if __name__ == "__main__":
     web_thread.start()
 
     print(
-        "🤖 Telegram bot запускается..."
+        "рџ¤– Telegram bot Р·Р°РїСѓСЃРєР°РµС‚СЃСЏ..."
     )
 
     bot.infinity_polling(
